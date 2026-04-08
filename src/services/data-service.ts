@@ -6,6 +6,7 @@ import type {
   DailyTimetable,
   Goal,
   Task,
+  UserProfile,
 } from "@/types";
 
 export interface DataService {
@@ -36,6 +37,7 @@ export interface DataService {
   addGoal(goal: Omit<Goal, "id" | "createdAt" | "updatedAt">): Promise<string>;
   updateGoal(id: string, updates: Partial<Goal>): Promise<void>;
   deleteGoal(id: string): Promise<void>;
+  bulkAddGoals(goals: Omit<Goal, "id" | "createdAt" | "updatedAt">[]): Promise<string[]>;
 
   // Tasks
   getTasks(): Promise<Task[]>;
@@ -44,8 +46,16 @@ export interface DataService {
   addTask(task: Omit<Task, "id" | "createdAt" | "updatedAt" | "completedMinutes" | "status">): Promise<string>;
   updateTask(id: string, updates: Partial<Task>): Promise<void>;
   deleteTask(id: string): Promise<void>;
+  unlinkTasksForGoals(goalIds: string[]): Promise<number>;
+
+  // User Profile
+  getUserProfile(): Promise<UserProfile | undefined>;
+  saveUserProfile(profile: Omit<UserProfile, "id" | "createdAt" | "updatedAt">): Promise<string>;
+  updateUserProfile(updates: Partial<UserProfile>): Promise<void>;
 
   // App Settings
   isOnboardingComplete(): Promise<boolean>;
   setOnboardingComplete(): Promise<void>;
+  getOnboardingStep(): Promise<number>;
+  setOnboardingStep(step: number): Promise<void>;
 }
