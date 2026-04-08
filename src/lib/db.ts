@@ -7,6 +7,7 @@ import type {
   Goal,
   Task,
   AppSettings,
+  UserProfile,
 } from "@/types";
 
 class LifeBuilderDB extends Dexie {
@@ -17,6 +18,7 @@ class LifeBuilderDB extends Dexie {
   goals!: EntityTable<Goal, "id">;
   tasks!: EntityTable<Task, "id">;
   appSettings!: EntityTable<AppSettings, "id">;
+  userProfiles!: EntityTable<UserProfile, "id">;
 
   constructor() {
     super("LifeBuilderDB");
@@ -30,6 +32,26 @@ class LifeBuilderDB extends Dexie {
       tasks: "++id, horizonKey, goalId, status",
       appSettings: "++id",
     });
+
+    this.version(2)
+      .stores({
+        horizonAllocations: "++id, horizonKey",
+        weeklyRoutineTasks: "++id, dayOfWeek",
+        dailyOverrides: "++id, date",
+        dailyTimetables: "++id, &date",
+        goals: "++id, horizonKey, source",
+        tasks: "++id, horizonKey, goalId, status",
+        appSettings: "++id",
+        userProfiles: "++id",
+      })
+      .upgrade((tx) => {
+        return tx
+          .table("goals")
+          .toCollection()
+          .modify((goal) => {
+            goal.source = goal.source ?? "manual";
+          });
+      });
   }
 }
 
