@@ -9,3 +9,10 @@ export function useOnboardingComplete(): boolean | undefined {
     return settings?.onboardingComplete ?? false;
   }, []);
 }
+
+export function useOnboardingStep(): number | undefined {
+  return useLiveQuery(async () => {
+    const settings = await db.appSettings.toCollection().first();
+    return settings?.onboardingStep ?? 0;
+  }, []);
+}
