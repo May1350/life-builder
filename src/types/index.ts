@@ -18,6 +18,24 @@ export interface TimeHorizon {
 }
 
 // ============================================================
+// Generatable Horizons (excludes this-week from AI generation)
+// ============================================================
+
+export type GeneratableHorizonKey = Exclude<HorizonKey, "this-week">;
+
+// ============================================================
+// Wheel of Life Categories
+// ============================================================
+
+export type WheelOfLifeCategory =
+  | "career"
+  | "health"
+  | "relationships"
+  | "finance"
+  | "growth"
+  | "recreation";
+
+// ============================================================
 // Horizon Allocation
 // ============================================================
 
@@ -108,7 +126,9 @@ export interface Goal {
   id?: string;
   horizonKey: HorizonKey;
   title: string;
+  description?: string;
   priority: Priority;
+  source?: "manual" | "ai-generated";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -145,6 +165,29 @@ export interface Task {
 export interface AppSettings {
   id?: string;
   onboardingComplete: boolean;
+  onboardingStep?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================
+// User Profile (AI goal generation input)
+// ============================================================
+
+export interface UserProfile {
+  id?: string;
+  age: number;
+  occupation: string;
+  lifeStage: string;
+  interests: string[];
+  values: string[];
+  currentFocus: string;
+  desiredChange: string;
+  neededSkills: string;
+  midTermVision: string;
+  lifetimeDream: string;
+  coherenceThread?: string;
+  wheelOfLifeBalance?: Record<string, number>;
   createdAt: Date;
   updatedAt: Date;
 }
