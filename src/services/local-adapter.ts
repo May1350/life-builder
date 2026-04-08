@@ -8,6 +8,7 @@ import type {
   DailyTimetable,
   Goal,
   Task,
+  UserProfile,
 } from "@/types";
 
 export class LocalAdapter implements DataService {
@@ -141,6 +142,24 @@ export class LocalAdapter implements DataService {
     await db.goals.delete(id);
   }
 
+  async bulkAddGoals(
+    goals: Omit<Goal, "id" | "createdAt" | "updatedAt">[]
+  ): Promise<string[]> {
+    const now = new Date();
+    const ids: string[] = [];
+    await db.transaction("rw", db.goals, async () => {
+      for (const goal of goals) {
+        const id = await db.goals.add({
+          ...goal,
+          createdAt: now,
+          updatedAt: now,
+        } as Goal);
+        ids.push(String(id));
+      }
+    });
+    return ids;
+  }
+
   // ── Tasks ──
 
   async getTasks(): Promise<Task[]> {
@@ -190,6 +209,25 @@ export class LocalAdapter implements DataService {
     await db.tasks.delete(id);
   }
 
+  async unlinkTasksForGoals(goalIds: string[]): Promise<number> {
+    if (goalIds.length === 0) return 0;
+    let count = 0;
+    await db.transaction("rw", db.tasks, async () => {
+      const tasks = await db.tasks
+        .where("goalId")
+        .anyOf(goalIds)
+        .toArray();
+      for (const task of tasks) {
+        await db.tasks.update(task.id!, {
+          goalId: undefined,
+          updatedAt: new Date(),
+        });
+        count++;
+      }
+    });
+    return count;
+  }
+
   // ── App Settings ──
 
   async isOnboardingComplete(): Promise<boolean> {
@@ -210,6 +248,59 @@ export class LocalAdapter implements DataService {
         onboardingComplete: true,
         createdAt: now,
         updatedAt: now,
+      });
+    }
+  }
+
+  async getOnboardingStep(): Promise<number> {
+    const settings = await db.appSettings.toCollection().first();
+    return settings?.onboardingStep ?? 0;
+  }
+
+  async setOnboardingStep(step: number): Promise<void> {
+    const now = new Date();
+    const existing = await db.appSettings.toCollection().first();
+    if (existing?.id) {
+      await db.appSettings.update(existing.id, {
+        onboardingStep: step,
+        updatedAt: now,
+      });
+    } else {
+      await db.appSettings.add({
+        onboardingComplete: false,
+        onboardingStep: step,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+  }
+
+  // ── User Profile ──
+
+  async getUserProfile(): Promise<UserProfile | undefined> {
+    return db.userProfiles.toCollection().first();
+  }
+
+  async saveUserProfile(
+    profile: Omit<UserProfile, "id" | "createdAt" | "updatedAt">
+  ): Promise<string> {
+    const now = new Date();
+    // Replace existing profile (single user)
+    await db.userProfiles.clear();
+    const id = await db.userProfiles.add({
+      ...profile,
+      createdAt: now,
+      updatedAt: now,
+    } as UserProfile);
+    return String(id);
+  }
+
+  async updateUserProfile(updates: Partial<UserProfile>): Promise<void> {
+    const existing = await db.userProfiles.toCollection().first();
+    if (existing?.id) {
+      await db.userProfiles.update(existing.id, {
+        ...updates,
+        updatedAt: new Date(),
       });
     }
   }
