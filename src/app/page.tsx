@@ -46,7 +46,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <Header subtitle={subtitle} />
+      <Header subtitle={subtitle} onSettingsClick={() => router.push("/settings")} />
 
       {/* Circular chart */}
       <div className="flex-shrink-0 py-4">
