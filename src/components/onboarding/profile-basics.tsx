@@ -59,7 +59,7 @@ export function ProfileBasics({ initial, onNext, onBack }: Props) {
   return (
     <div className="flex-1 flex flex-col px-6 py-8">
       <div className="mb-6">
-        <p className="text-xs text-gray-400 mb-1">Step 3 of 7</p>
+        <p className="text-xs text-gray-400 mb-1">Step 3 of 5</p>
         <h2 className="text-xl font-bold text-gray-900">About You</h2>
         <p className="text-sm text-gray-500 mt-1">Help us understand your background.</p>
       </div>

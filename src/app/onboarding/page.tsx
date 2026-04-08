@@ -75,7 +75,8 @@ export default function OnboardingPage() {
     dataService.setOnboardingStep(STEPS.indexOf(s));
   }, []);
 
-  const generateGoals = useCallback(async () => {
+  // Accept optional override to avoid stale closure on profile state
+  const generateGoals = useCallback(async (profileOverride?: ProfileData) => {
     setAiError(false);
     goTo("loading");
 
@@ -87,7 +88,6 @@ export default function OnboardingPage() {
       const allocations = await dataService.getAllocations();
       const routineTasks = await dataService.getAllRoutineTasks();
 
-      // Fix 5: Use calculateFreeHours utility
       const weekdayTasks = routineTasks.filter((t) => t.dayOfWeek >= 1 && t.dayOfWeek <= 5);
       const weekendTasks = routineTasks.filter((t) => t.dayOfWeek === 0 || t.dayOfWeek === 6);
 
@@ -99,7 +99,7 @@ export default function OnboardingPage() {
         allocationMap[a.horizonKey] = a.percentage;
       }
 
-      const fullProfile = profile as ProfileData;
+      const fullProfile = profileOverride ?? (profile as ProfileData);
 
       // Save profile to Dexie before API call
       await dataService.saveUserProfile({
@@ -135,6 +135,7 @@ export default function OnboardingPage() {
   }, [profile, goTo]);
 
   const saveGoalsAndFinish = useCallback(async (data: GenerateGoalsResponse) => {
+    try {
     const horizonKeys: GeneratableHorizonKey[] = [
       "this-month", "this-year", "3-years", "10-years", "lifetime",
     ];
@@ -177,9 +178,12 @@ export default function OnboardingPage() {
       wheelOfLifeBalance: data.wheelOfLifeBalance,
     });
 
-    // Fix 3: Use separate state instead of mutating aiResponse
     setSavedCounts({ goals: totalGoals, tasks: totalTasks });
     goTo("day-ready");
+    } catch {
+      setAiError(true);
+      goTo("loading");
+    }
   }, [goTo]);
 
   const handleFinish = useCallback(async () => {
@@ -224,7 +228,7 @@ export default function OnboardingPage() {
             className="flex-1 flex flex-col px-6 py-8"
           >
             <div className="mb-6">
-              <p className="text-xs text-gray-400 mb-1">Step 1 of 7</p>
+              <p className="text-xs text-gray-400 mb-1">Step 1 of 5</p>
               <h2 className="text-xl font-bold text-gray-900">Your Weekly Routine</h2>
               <p className="text-sm text-gray-500 mt-1">Add your regular commitments for each day.</p>
             </div>
@@ -247,7 +251,7 @@ export default function OnboardingPage() {
             className="flex-1 flex flex-col px-6 py-8"
           >
             <div className="mb-6">
-              <p className="text-xs text-gray-400 mb-1">Step 2 of 7</p>
+              <p className="text-xs text-gray-400 mb-1">Step 2 of 5</p>
               <h2 className="text-xl font-bold text-gray-900">Time Allocation</h2>
               <p className="text-sm text-gray-500 mt-1">How should your free time be split across horizons?</p>
             </div>
@@ -282,7 +286,11 @@ export default function OnboardingPage() {
           <motion.div key="profile-vision" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="flex-1 flex flex-col">
             <ProfileVision
               initial={profile}
-              onNext={(data) => { setProfile((p) => ({ ...p, ...data })); generateGoals(); }}
+              onNext={(data) => {
+                const complete = { ...profile, ...data } as ProfileData;
+                setProfile(complete);
+                generateGoals(complete);
+              }}
               onBack={() => goTo("profile-current")}
             />
           </motion.div>

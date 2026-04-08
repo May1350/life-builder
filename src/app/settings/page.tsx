@@ -15,6 +15,10 @@ import { calculateFreeHours } from "@/lib/time-utils";
 import type { GenerateGoalsResponse } from "@/lib/ai-schemas";
 import type { GeneratableHorizonKey, HorizonKey } from "@/types";
 
+const VALID_HORIZON_KEYS: HorizonKey[] = [
+  "this-week", "this-month", "this-year", "3-years", "10-years", "lifetime",
+];
+
 const HORIZONS: { key: GeneratableHorizonKey; label: string }[] = [
   { key: "this-month", label: "This Month" },
   { key: "this-year", label: "This Year" },
@@ -131,6 +135,7 @@ export default function SettingsPage() {
   }, [selectedGoals, goalActions, directionChange]);
 
   const saveRegenerated = useCallback(async (data: GenerateGoalsResponse) => {
+    try {
     // Delete removed goals and unlink their tasks
     const removedIds = selectedGoals
       .filter((g) => goalActions.get(g.id!) === "remove")
@@ -155,7 +160,9 @@ export default function SettingsPage() {
           source: "ai-generated",
         });
         for (const task of goal.starterTasks) {
-          const taskHorizonKey: HorizonKey = task.horizonKey as HorizonKey;
+          const taskHorizonKey = VALID_HORIZON_KEYS.includes(task.horizonKey as HorizonKey)
+            ? (task.horizonKey as HorizonKey)
+            : hk;
           await dataService.addTask({
             horizonKey: taskHorizonKey,
             goalId,
@@ -178,6 +185,10 @@ export default function SettingsPage() {
       setTimeout(() => router.push("/"), 2000);
     } else {
       router.push("/");
+    }
+    } catch {
+      setAiError(true);
+      setView("loading");
     }
   }, [selectedGoals, goalActions, selectedHorizons, router]);
 
@@ -209,7 +220,7 @@ export default function SettingsPage() {
         {view === "main" && (
           <motion.div key="main" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 space-y-4">
             <Button className="w-full" onClick={() => setView("select-horizons")}>
-              Reset Goals
+              Adjust Goals
             </Button>
           </motion.div>
         )}
@@ -250,7 +261,7 @@ export default function SettingsPage() {
             </p>
             <div className="space-y-2 mb-6 max-h-[50vh] overflow-y-auto">
               {selectedGoals.map((goal) => {
-                const action = goalActions.get(goal.id!) ?? "remove";
+                const action = goalActions.get(goal.id!) ?? "keep";
                 return (
                   <div key={goal.id} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200">
                     <span className="flex-1 text-sm">{goal.title}</span>

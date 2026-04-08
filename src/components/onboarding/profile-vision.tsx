@@ -28,7 +28,7 @@ export function ProfileVision({ initial, onNext, onBack }: Props) {
   return (
     <div className="flex-1 flex flex-col px-6 py-8">
       <div className="mb-6">
-        <p className="text-xs text-gray-400 mb-1">Step 5 of 7</p>
+        <p className="text-xs text-gray-400 mb-1">Step 5 of 5</p>
         <h2 className="text-xl font-bold text-gray-900">Your Vision</h2>
         <p className="text-sm text-gray-500 mt-1">Dream big. We'll work backwards from here.</p>
       </div>
