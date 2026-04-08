@@ -81,3 +81,19 @@ export function nowTime(): string {
   const d = new Date();
   return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
 }
+
+/**
+ * Calculates free hours from a list of routine tasks for a given day.
+ * Free hours = 24 - total hours occupied by routine tasks.
+ * Used by both onboarding (profile summary) and settings (goal reset).
+ */
+export function calculateFreeHours(
+  routineTasks: { startTime: string; endTime: string }[]
+): number {
+  const totalRoutineMinutes = routineTasks.reduce(
+    (sum, task) => sum + durationMinutes(task.startTime, task.endTime),
+    0
+  );
+  const freeMinutes = Math.max(0, 1440 - totalRoutineMinutes);
+  return Math.round((freeMinutes / 60) * 10) / 10; // 1 decimal place
+}
