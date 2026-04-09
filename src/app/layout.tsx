@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { LocaleProvider } from "@/providers/locale-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Life Builder",
   description: "Design your day with intention",
+  other: {
+    "viewport": "width=device-width, initial-scale=1, viewport-fit=cover",
+  },
 };
 
 export default function RootLayout({
@@ -27,10 +31,10 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex justify-center bg-gray-50">
-        <div className="w-full max-w-[430px] min-h-screen bg-white shadow-[0_0_40px_rgba(0,0,0,0.06)]">
+      <body className="min-h-full bg-gray-50">
+        <LocaleProvider>
           {children}
-        </div>
+        </LocaleProvider>
       </body>
     </html>
   );
