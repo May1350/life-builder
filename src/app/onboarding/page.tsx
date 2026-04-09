@@ -17,6 +17,10 @@ import { dataService } from "@/services";
 import { calculateFreeHours } from "@/lib/time-utils";
 import type { GenerateGoalsResponse } from "@/lib/ai-schemas";
 import type { GeneratableHorizonKey, HorizonKey } from "@/types";
+import { type Locale, LOCALE_LABELS } from "@/lib/locale";
+import { MobileShell } from "@/components/shared/mobile-shell";
+import { useLocale } from "@/providers/locale-provider";
+import { apiUrl } from "@/lib/api";
 
 const VALID_HORIZON_KEYS: HorizonKey[] = [
   "this-week", "this-month", "this-year", "3-years", "10-years", "lifetime",
@@ -53,6 +57,7 @@ interface ProfileData {
 
 export default function OnboardingPage() {
   const [step, setStep] = useState<Step>("welcome");
+  const { locale, setLocale, t } = useLocale();
   const [profile, setProfile] = useState<Partial<ProfileData>>({});
   const [aiResponse, setAiResponse] = useState<GenerateGoalsResponse | null>(null);
   const [aiError, setAiError] = useState(false);
@@ -108,7 +113,7 @@ export default function OnboardingPage() {
         wheelOfLifeBalance: undefined,
       });
 
-      const res = await fetch("/api/generate-goals", {
+      const res = await fetch(apiUrl("/api/generate-goals"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: controller.signal,
@@ -120,6 +125,7 @@ export default function OnboardingPage() {
           },
           allocations: allocationMap,
           mode: "initial",
+          locale,
         }),
       });
 
@@ -136,23 +142,44 @@ export default function OnboardingPage() {
 
   const saveGoalsAndFinish = useCallback(async (data: GenerateGoalsResponse) => {
     try {
+    // Save top-down so parent IDs are available for children
     const horizonKeys: GeneratableHorizonKey[] = [
-      "this-month", "this-year", "3-years", "10-years", "lifetime",
+      "lifetime", "10-years", "3-years", "this-year", "this-month",
     ];
+
+    const parentHorizon: Record<string, GeneratableHorizonKey> = {
+      "10-years": "lifetime",
+      "3-years": "10-years",
+      "this-year": "3-years",
+      "this-month": "this-year",
+    };
+
+    const savedIds: Record<string, Record<number, string>> = {};
 
     let totalGoals = 0;
     let totalTasks = 0;
 
     for (const hk of horizonKeys) {
+      savedIds[hk] = {};
       const goals = data.goals[hk] ?? [];
-      for (const goal of goals) {
+      for (let i = 0; i < goals.length; i++) {
+        const goal = goals[i];
+
+        let parentGoalId: number | undefined;
+        if (goal.parentIndex !== undefined && parentHorizon[hk]) {
+          const pid = savedIds[parentHorizon[hk]]?.[goal.parentIndex];
+          if (pid) parentGoalId = Number(pid);
+        }
+
         const goalId = await dataService.addGoal({
           horizonKey: hk,
           title: goal.title,
           description: goal.description,
           priority: goal.priority,
           source: "ai-generated",
+          parentGoalId,
         });
+        savedIds[hk][i] = String(goalId);
         totalGoals++;
 
         for (const task of goal.starterTasks) {
@@ -197,6 +224,7 @@ export default function OnboardingPage() {
   }, [router]);
 
   return (
+    <MobileShell>
     <div className="min-h-screen bg-white flex flex-col">
       <AnimatePresence mode="wait">
         {step === "welcome" && (
@@ -207,14 +235,47 @@ export default function OnboardingPage() {
             exit={{ opacity: 0, x: -50 }}
             className="flex-1 flex flex-col items-center justify-center px-8"
           >
+            {/* Language selector — pill row */}
+            <div className="flex gap-1 rounded-full bg-gray-100 p-1 mb-10">
+              {(Object.keys(LOCALE_LABELS) as Locale[]).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setLocale(l)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    locale === l
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-400 hover:text-gray-600"
+                  }`}
+                >
+                  {LOCALE_LABELS[l]}
+                </button>
+              ))}
+            </div>
+
             <h1 className="text-3xl font-bold text-gray-900 text-center">
-              Welcome to<br />Life <span className="font-black">Builder</span>
+              Life <span className="font-black">Builder</span>
             </h1>
-            <p className="text-gray-500 mt-4 text-center text-sm max-w-xs">
-              Tell us about you. We'll create personalized goals and a schedule for your entire future.
-            </p>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={locale}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15 }}
+                className="flex flex-col items-center"
+              >
+                <p className="text-gray-600 mt-3 text-center text-base font-medium">
+                  {t("welcome.greeting")}
+                </p>
+                <p className="text-gray-400 mt-2 text-center text-sm max-w-xs">
+                  {t("welcome.subtitle")}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+
             <Button className="mt-8 px-8" onClick={() => goTo("routine")}>
-              Get Started
+              {t("welcome.cta")}
             </Button>
           </motion.div>
         )}
@@ -228,16 +289,16 @@ export default function OnboardingPage() {
             className="flex-1 flex flex-col px-6 py-8"
           >
             <div className="mb-6">
-              <p className="text-xs text-gray-400 mb-1">Step 1 of 5</p>
-              <h2 className="text-xl font-bold text-gray-900">Your Weekly Routine</h2>
-              <p className="text-sm text-gray-500 mt-1">Add your regular commitments for each day.</p>
+              <p className="text-xs text-gray-400 mb-1">{t("onboarding.step", { n: 1 })}</p>
+              <h2 className="text-xl font-bold text-gray-900">{t("routine.title")}</h2>
+              <p className="text-sm text-gray-500 mt-1">{t("routine.subtitle")}</p>
             </div>
             <div className="flex-1 overflow-y-auto">
               <RoutineEditor />
             </div>
             <div className="flex gap-2 mt-4">
-              <Button variant="outline" className="flex-1" onClick={() => goTo("welcome")}>Back</Button>
-              <Button className="flex-1" onClick={() => goTo("allocation")}>Next</Button>
+              <Button variant="outline" className="flex-1" onClick={() => goTo("welcome")}>{t("common.back")}</Button>
+              <Button className="flex-1" onClick={() => goTo("allocation")}>{t("common.next")}</Button>
             </div>
           </motion.div>
         )}
@@ -251,9 +312,9 @@ export default function OnboardingPage() {
             className="flex-1 flex flex-col px-6 py-8"
           >
             <div className="mb-6">
-              <p className="text-xs text-gray-400 mb-1">Step 2 of 5</p>
-              <h2 className="text-xl font-bold text-gray-900">Time Allocation</h2>
-              <p className="text-sm text-gray-500 mt-1">How should your free time be split across horizons?</p>
+              <p className="text-xs text-gray-400 mb-1">{t("onboarding.step", { n: 2 })}</p>
+              <h2 className="text-xl font-bold text-gray-900">{t("allocation.title")}</h2>
+              <p className="text-sm text-gray-500 mt-1">{t("allocation.subtitle")}</p>
             </div>
             <div className="flex-1 overflow-y-auto">
               {/* Fix 6: AllocationEditor onSave advances to profile-basics */}
@@ -298,7 +359,16 @@ export default function OnboardingPage() {
 
         {step === "loading" && (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 flex flex-col">
-            <GoalLoading error={aiError} onRetry={generateGoals} onSkip={handleSkip} />
+            <GoalLoading
+              error={aiError}
+              onRetry={generateGoals}
+              onSkip={handleSkip}
+              onCancel={() => {
+                abortRef.current?.abort();
+                setAiError(true);
+              }}
+              profile={profile as Record<string, unknown>}
+            />
           </motion.div>
         )}
 
@@ -320,5 +390,6 @@ export default function OnboardingPage() {
         )}
       </AnimatePresence>
     </div>
+    </MobileShell>
   );
 }
