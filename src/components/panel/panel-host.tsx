@@ -70,7 +70,7 @@ export function PanelHost({ children, panelContent }: Props) {
 
   return (
     <Ctx.Provider value={{ activePanel, openPanel, closePanel }}>
-      <div className="relative h-dvh overflow-hidden bg-neutral-100">
+      <div className="relative h-full overflow-hidden bg-neutral-100">
 
         {/* ── Side panels (menu / settings) — full screen behind main ── */}
         <AnimatePresence>

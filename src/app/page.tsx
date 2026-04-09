@@ -42,7 +42,10 @@ function BottomTrigger({ atBottom }: { atBottom?: boolean }) {
   return (
     <button
       className="w-full bg-gray-50 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.06)] hover:bg-gray-100 transition-colors px-6"
-      style={{ padding: atBottom ? "8px 24px" : "6px 24px" }}
+      style={{
+        padding: atBottom ? "8px 24px" : "6px 24px",
+        paddingBottom: `calc(${atBottom ? "8px" : "6px"} + env(safe-area-inset-bottom))`,
+      }}
       onClick={() => openPanel("manage")}
     >
       <div className="flex justify-center">
@@ -127,7 +130,7 @@ function MainContent({
   }, []);
 
   return (
-    <div className="h-dvh bg-white flex flex-col">
+    <div className="h-full bg-white flex flex-col">
       {/* Fixed header */}
       <div className="sticky top-0 z-30 bg-white">
         <Header
