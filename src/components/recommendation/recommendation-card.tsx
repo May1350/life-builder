@@ -1,11 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, SkipForward, Clock } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Recommendation } from "@/engine/recommender";
 import { getHorizonColor } from "@/lib/constants";
 import { dataService } from "@/services";
+import { useLocale } from "@/providers/locale-provider";
+import { timeToMinutes, nowTime } from "@/lib/time-utils";
 
 interface RecommendationCardProps {
   recommendation: Recommendation;
@@ -16,6 +18,7 @@ export function RecommendationCard({
   recommendation,
   onRefresh,
 }: RecommendationCardProps) {
+  const { t } = useLocale();
   const { currentBlock, primary, alternatives, primaryGoal, emptyMessage } =
     recommendation;
 
@@ -24,26 +27,35 @@ export function RecommendationCard({
       ? getHorizonColor(currentBlock.horizonKey)
       : "#6b7280";
 
-  const handleComplete = async () => {
+  const handleDidIt = async () => {
     if (!primary?.id) return;
-    await dataService.updateTask(primary.id, {
-      status: "completed",
-      completedAt: new Date(),
-    });
-    onRefresh();
-  };
 
-  const handlePartial = async () => {
-    if (!primary?.id) return;
-    const minutesStr = prompt("How many minutes did you work?");
-    if (!minutesStr) return;
-    const minutes = parseInt(minutesStr, 10);
-    if (isNaN(minutes) || minutes <= 0) return;
+    let minutesToAdd = 0;
+
+    const scheduled = currentBlock.scheduledTasks?.find(
+      (s) => s.taskId === primary.id
+    );
+
+    if (scheduled) {
+      minutesToAdd = scheduled.minutes;
+    } else if (primary.estimatedMinutes) {
+      const blockRemaining =
+        timeToMinutes(currentBlock.end) - timeToMinutes(nowTime());
+      const taskRemaining =
+        primary.estimatedMinutes - (primary.completedMinutes ?? 0);
+      minutesToAdd = Math.max(1, Math.min(blockRemaining, taskRemaining));
+    }
+
+    const newCompleted = (primary.completedMinutes ?? 0) + minutesToAdd;
+    const isFullyDone =
+      !primary.estimatedMinutes || newCompleted >= primary.estimatedMinutes;
 
     await dataService.updateTask(primary.id, {
-      completedMinutes: (primary.completedMinutes ?? 0) + minutes,
-      status: "in_progress",
+      completedMinutes: newCompleted,
+      status: isFullyDone ? "completed" : "in_progress",
+      ...(isFullyDone ? { completedAt: new Date() } : {}),
     });
+
     onRefresh();
   };
 
@@ -51,7 +63,7 @@ export function RecommendationCard({
     return (
       <div className="mx-4 rounded-2xl bg-white p-4 shadow-sm border border-gray-100">
         <p className="text-sm text-gray-500 text-center">
-          {emptyMessage ?? "No recommendations right now."}
+          {emptyMessage ?? t("rec.empty")}
         </p>
       </div>
     );
@@ -75,13 +87,13 @@ export function RecommendationCard({
           </p>
           {primaryGoal && (
             <p className="text-xs text-gray-500 mt-0.5">
-              Goal: {primaryGoal.title}
+              {t("rec.goal")} {primaryGoal.title}
             </p>
           )}
           {primary.estimatedMinutes && (
             <p className="text-xs text-gray-400 mt-0.5">
               {primary.estimatedMinutes - (primary.completedMinutes ?? 0)}m
-              remaining
+              {" "}{t("rec.remaining")}
             </p>
           )}
         </div>
@@ -93,37 +105,26 @@ export function RecommendationCard({
           size="sm"
           variant="outline"
           className="flex-1 text-xs"
-          onClick={handleComplete}
+          onClick={handleDidIt}
         >
-          <Check className="h-3.5 w-3.5 mr-1" /> Done
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex-1 text-xs"
-          onClick={handlePartial}
-        >
-          <Clock className="h-3.5 w-3.5 mr-1" /> Partial
+          <Check className="h-3.5 w-3.5 mr-1" /> {t("rec.didIt")}
         </Button>
         <Button
           size="sm"
           variant="ghost"
-          className="text-xs text-gray-400"
+          className="flex-1 text-xs text-gray-400"
           onClick={onRefresh}
         >
-          <SkipForward className="h-3.5 w-3.5" />
+          {t("rec.nextTime")} <ChevronRight className="h-3.5 w-3.5 ml-1" />
         </Button>
       </div>
 
-      {/* Alternatives */}
+      {/* Next task preview */}
       {alternatives.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-gray-50">
-          <p className="text-xs text-gray-400 mb-1">Also available:</p>
-          {alternatives.map((alt) => (
-            <p key={alt.id} className="text-xs text-gray-500 truncate">
-              · {alt.title}
-            </p>
-          ))}
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <p className="text-xs text-gray-400 truncate">
+            {t("rec.upNext")} ▸ {alternatives[0].title}
+          </p>
         </div>
       )}
     </motion.div>
