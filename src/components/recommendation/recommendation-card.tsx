@@ -12,11 +12,13 @@ import { timeToMinutes, nowTime } from "@/lib/time-utils";
 interface RecommendationCardProps {
   recommendation: Recommendation;
   onRefresh: () => void;
+  onDidIt?: () => void;
 }
 
 export function RecommendationCard({
   recommendation,
   onRefresh,
+  onDidIt,
 }: RecommendationCardProps) {
   const { t } = useLocale();
   const { currentBlock, primary, alternatives, primaryGoal, emptyMessage } =
@@ -58,7 +60,7 @@ export function RecommendationCard({
       ...(isFullyDone ? { completedAt: new Date() } : {}),
     });
 
-    onRefresh();
+    onDidIt?.();
   };
 
   if (!primary) {
@@ -73,8 +75,10 @@ export function RecommendationCard({
 
   return (
     <motion.div
+      key={primary.id}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
       className="mx-4 rounded-2xl bg-white p-4 shadow-sm border border-gray-100"
     >
       {/* Primary task */}
