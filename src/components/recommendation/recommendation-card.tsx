@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Recommendation } from "@/engine/recommender";
@@ -74,11 +74,13 @@ export function RecommendationCard({
   }
 
   return (
+    <AnimatePresence mode="wait">
     <motion.div
       key={primary.id}
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       className="mx-4 rounded-2xl bg-white p-4 shadow-sm border border-gray-100"
     >
       {/* Primary task */}
@@ -134,5 +136,6 @@ export function RecommendationCard({
         </div>
       )}
     </motion.div>
+    </AnimatePresence>
   );
 }
