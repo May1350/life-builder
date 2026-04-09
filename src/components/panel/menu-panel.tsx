@@ -3,7 +3,7 @@
 import { useLocale } from "@/providers/locale-provider";
 import { usePanel } from "./panel-host";
 import { useRouter } from "next/navigation";
-import { Settings, ListTodo, Target, Clock, Sliders, Heart, Network } from "lucide-react";
+import { Settings, Heart, Network } from "lucide-react";
 
 export function MenuPanel() {
   const { t } = useLocale();
@@ -11,17 +11,13 @@ export function MenuPanel() {
   const router = useRouter();
 
   const items = [
-    { icon: ListTodo, label: t("sheet.tab.tasks"), action: () => openPanel("manage") },
     { icon: Network, label: "Goal Tree", action: () => { closePanel(); router.push("/tree"); } },
     { icon: Heart, label: t("healthReview.menuItem"), action: () => openPanel("review") },
-    { icon: Clock, label: t("sheet.tab.routine"), action: () => openPanel("settings") },
-    { icon: Sliders, label: t("sheet.tab.horizons"), action: () => openPanel("settings") },
-    { icon: Target, label: t("settings.adjustGoals"), action: () => openPanel("settings") },
     { icon: Settings, label: t("settings.title"), action: () => openPanel("settings") },
   ];
 
   return (
-    <div className="px-5 pt-5 min-h-dvh">
+    <div className="px-5 pt-5 min-h-dvh" style={{ paddingTop: "calc(env(safe-area-inset-top) + 20px)" }}>
       <h2 className="text-lg font-bold mb-6">Menu</h2>
       <nav className="space-y-1">
         {items.map((item) => (
