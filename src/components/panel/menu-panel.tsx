@@ -3,7 +3,7 @@
 import { useLocale } from "@/providers/locale-provider";
 import { usePanel } from "./panel-host";
 import { useRouter } from "next/navigation";
-import { Settings, Heart, Network } from "lucide-react";
+import { Settings, Heart, Network, Clock } from "lucide-react";
 
 export function MenuPanel() {
   const { t } = useLocale();
@@ -13,6 +13,7 @@ export function MenuPanel() {
   const items = [
     { icon: Network, label: "Goal Tree", action: () => { closePanel(); router.push("/tree"); } },
     { icon: Heart, label: t("healthReview.menuItem"), action: () => openPanel("review") },
+    { icon: Clock, label: t("sheet.tab.routine"), action: () => { closePanel(); router.push("/onboarding?step=routine"); } },
     { icon: Settings, label: t("settings.title"), action: () => openPanel("settings") },
   ];
 

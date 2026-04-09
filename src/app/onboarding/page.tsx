@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -56,7 +57,14 @@ interface ProfileData {
 }
 
 export default function OnboardingPage() {
-  const [step, setStep] = useState<Step>("welcome");
+  const searchParams = useSearchParams();
+  const initialStep = useMemo(() => {
+    const s = searchParams.get("step");
+    return s && STEPS.includes(s as Step) ? (s as Step) : "welcome";
+  }, [searchParams]);
+  const editMode = initialStep !== "welcome";
+
+  const [step, setStep] = useState<Step>(initialStep);
   const { locale, setLocale, t } = useLocale();
   const [profile, setProfile] = useState<Partial<ProfileData>>({});
   const [aiResponse, setAiResponse] = useState<GenerateGoalsResponse | null>(null);
@@ -297,8 +305,14 @@ export default function OnboardingPage() {
               <RoutineEditor />
             </div>
             <div className="flex gap-2 mt-4">
-              <Button variant="outline" className="flex-1" onClick={() => goTo("welcome")}>{t("common.back")}</Button>
-              <Button className="flex-1" onClick={() => goTo("allocation")}>{t("common.next")}</Button>
+              {editMode ? (
+                <Button className="flex-1" onClick={() => router.push("/")}>{t("common.save")}</Button>
+              ) : (
+                <>
+                  <Button variant="outline" className="flex-1" onClick={() => goTo("welcome")}>{t("common.back")}</Button>
+                  <Button className="flex-1" onClick={() => goTo("allocation")}>{t("common.next")}</Button>
+                </>
+              )}
             </div>
           </motion.div>
         )}
