@@ -219,7 +219,7 @@ export function SettingsPanel() {
   }, [selectedGoals, goalActions, selectedHorizons, closePanel, t]);
 
   return (
-    <div className="flex flex-col h-full min-h-screen overflow-y-auto">
+    <div className="flex flex-col h-full min-h-dvh overflow-y-auto">
       {/* Header */}
       <div className="px-5 pt-5 pb-3">
         <h2 className="text-lg font-bold">{t("settings.title")}</h2>

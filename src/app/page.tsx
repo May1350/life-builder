@@ -127,7 +127,7 @@ function MainContent({
   }, []);
 
   return (
-    <div className="h-screen bg-white flex flex-col">
+    <div className="h-dvh bg-white flex flex-col">
       {/* Fixed header */}
       <div className="sticky top-0 z-30 bg-white">
         <Header
@@ -205,7 +205,7 @@ export default function HomePage() {
 
   if (!dbReady || onboardingComplete === undefined || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-dvh flex items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
       </div>
     );

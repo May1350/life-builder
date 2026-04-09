@@ -225,7 +225,7 @@ export default function OnboardingPage() {
 
   return (
     <MobileShell>
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-dvh bg-white flex flex-col">
       <AnimatePresence mode="wait">
         {step === "welcome" && (
           <motion.div

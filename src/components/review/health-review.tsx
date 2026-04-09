@@ -200,7 +200,7 @@ export function HealthReview({
 
   if (phase === "loading") {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white px-6">
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white px-6" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
         <Loader2 className="size-8 animate-spin text-gray-400 mb-4" />
         <p className="text-sm text-gray-500">{t("loading.msg2")}</p>
       </div>
@@ -211,7 +211,7 @@ export function HealthReview({
 
   if (phase === "complete") {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white px-6">
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white px-6" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
         {error ? (
           <>
             <p className="text-sm text-red-600 mb-4">
@@ -246,7 +246,7 @@ export function HealthReview({
     ] ?? [];
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white px-6 py-8">
+    <div className="fixed inset-0 z-50 flex flex-col bg-white px-6 py-8" style={{ paddingTop: "calc(env(safe-area-inset-top) + 32px)", paddingBottom: "env(safe-area-inset-bottom)" }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-lg font-bold text-gray-900">

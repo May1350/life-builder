@@ -62,7 +62,7 @@ export default function TomorrowPage() {
   if (!data) return null;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-dvh bg-white" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       {/* Header */}
       <div className="flex items-center px-4 py-3">
         <Link href="/">
