@@ -8,6 +8,7 @@ import { getHorizonColor } from "@/lib/constants";
 import { dataService } from "@/services";
 import { useLocale } from "@/providers/locale-provider";
 import { timeToMinutes, nowTime } from "@/lib/time-utils";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 interface RecommendationCardProps {
   recommendation: Recommendation;
@@ -31,6 +32,8 @@ export function RecommendationCard({
 
   const handleDidIt = async () => {
     if (!primary?.id) return;
+
+    Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
 
     let minutesToAdd = 0;
 
