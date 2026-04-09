@@ -39,8 +39,10 @@ export function RecommendationCard({
     if (scheduled) {
       minutesToAdd = scheduled.minutes;
     } else if (primary.estimatedMinutes) {
-      const blockRemaining =
-        timeToMinutes(currentBlock.end) - timeToMinutes(nowTime());
+      const blockRemaining = Math.max(
+        0,
+        timeToMinutes(currentBlock.end) - timeToMinutes(nowTime()),
+      );
       const taskRemaining =
         primary.estimatedMinutes - (primary.completedMinutes ?? 0);
       minutesToAdd = Math.max(1, Math.min(blockRemaining, taskRemaining));
