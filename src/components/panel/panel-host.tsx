@@ -55,7 +55,7 @@ const panelLayout: Record<string, string> = {
   settings: "pl-[35%]",
 };
 
-const springTransition = { type: "spring" as const, stiffness: 260, damping: 28 };
+const springTransition = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 export function PanelHost({ children, panelContent }: Props) {
   const [activePanel, setActivePanel] = useState<PanelType>(null);
@@ -77,7 +77,7 @@ export function PanelHost({ children, panelContent }: Props) {
           {isSide && (
             <motion.div
               key={activePanel}
-              className={`absolute inset-0 z-10 bg-neutral-100 overflow-y-auto ${panelLayout[activePanel!] ?? ""}`}
+              className={`absolute inset-0 z-10 bg-neutral-100 overflow-y-auto will-change-transform ${panelLayout[activePanel!] ?? ""}`}
               initial={panelVariants[activePanel as "menu" | "settings"].initial}
               animate={panelVariants[activePanel as "menu" | "settings"].animate}
               exit={panelVariants[activePanel as "menu" | "settings"].exit}
@@ -90,7 +90,7 @@ export function PanelHost({ children, panelContent }: Props) {
 
         {/* ── Main content card ── */}
         <motion.div
-          className="absolute inset-0 z-20 bg-white overflow-hidden rounded-b-2xl"
+          className="absolute inset-0 z-20 bg-white overflow-hidden rounded-b-2xl will-change-transform"
           variants={mainVariants}
           animate={mainState}
           transition={springTransition}
@@ -116,7 +116,7 @@ export function PanelHost({ children, panelContent }: Props) {
           {isManage && (
             <motion.div
               key="manage"
-              className="absolute inset-x-0 bottom-0 z-30 bg-white rounded-t-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.1)] overflow-y-auto"
+              className="absolute inset-x-0 bottom-0 z-30 bg-white rounded-t-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.1)] overflow-y-auto will-change-transform"
               style={{ height: "78%" }}
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
