@@ -101,7 +101,10 @@ export function SettingsPanel() {
 
       const res = await fetch(apiUrl("/api/generate-goals"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-app-secret": process.env.NEXT_PUBLIC_APP_SHARED_SECRET ?? "",
+        },
         signal: controller.signal,
         body: JSON.stringify({
           profile: {
@@ -135,6 +138,13 @@ export function SettingsPanel() {
       if ((err as Error).name !== "AbortError") setAiError(true);
     }
   }, [selectedGoals, goalActions, directionChange, locale]);
+
+  const handleCancelRegen = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setAiError(false);
+    setView("direction-input");
+  }, []);
 
   const saveRegenerated = useCallback(async (data: GenerateGoalsResponse) => {
     try {
@@ -369,7 +379,12 @@ export function SettingsPanel() {
 
         {view === "loading" && (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col">
-            <GoalLoading error={aiError} onRetry={regenerate} onSkip={closePanel} />
+            <GoalLoading
+              error={aiError}
+              onRetry={regenerate}
+              onSkip={closePanel}
+              onCancel={handleCancelRegen}
+            />
           </motion.div>
         )}
 
