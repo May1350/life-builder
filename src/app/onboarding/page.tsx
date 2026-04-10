@@ -123,7 +123,10 @@ export default function OnboardingPage() {
 
       const res = await fetch(apiUrl("/api/generate-goals"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-app-secret": process.env.NEXT_PUBLIC_APP_SHARED_SECRET ?? "",
+        },
         signal: controller.signal,
         body: JSON.stringify({
           profile: fullProfile,

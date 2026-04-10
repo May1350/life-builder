@@ -124,7 +124,10 @@ export function HealthReview({
 
         const res = await fetch(apiUrl("/api/health-review"), {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-app-secret": process.env.NEXT_PUBLIC_APP_SHARED_SECRET ?? "",
+          },
           body: JSON.stringify({
             profile: {
               age: profile.age,
