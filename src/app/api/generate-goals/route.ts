@@ -7,50 +7,23 @@ import {
   type GenerateGoalsResponse,
 } from "@/lib/ai-schemas";
 import { buildSystemPrompt, buildUserMessage } from "@/lib/ai-prompt";
+import {
+  withTimeout,
+  sleep,
+  isRetryable,
+  stripMarkdownFences,
+  sanitizeRequest,
+  checkAuth,
+  rateLimit,
+} from "@/lib/ai-utils";
 
-const TIMEOUT_MS = 45_000;
-
-async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("Request timeout")), ms)
-  );
-  return Promise.race([promise, timeout]);
-}
-
-function stripMarkdownFences(text: string): string {
-  return text.replace(/^```(?:json)?\s*\n?/m, "").replace(/\n?```\s*$/m, "");
-}
-
-function sanitizeString(value: string, maxLen: number): string {
-  return value.slice(0, maxLen).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
-}
-
-function sanitizeRequest(body: unknown): unknown {
-  if (typeof body !== "object" || body === null) return body;
-  const obj = body as Record<string, unknown>;
-  if (obj.profile && typeof obj.profile === "object") {
-    const profile = obj.profile as Record<string, unknown>;
-    const nlFields = ["currentFocus", "desiredChange", "neededSkills", "midTermVision", "lifetimeDream"];
-    for (const field of nlFields) {
-      if (typeof profile[field] === "string") {
-        profile[field] = sanitizeString(profile[field] as string, 500);
-      }
-    }
-    const shortFields = ["occupation", "lifeStage"];
-    for (const field of shortFields) {
-      if (typeof profile[field] === "string") {
-        profile[field] = sanitizeString(profile[field] as string, 200);
-      }
-    }
-  }
-  if (typeof obj.directionChange === "string") {
-    obj.directionChange = sanitizeString(obj.directionChange as string, 500);
-  }
-  return obj;
-}
+const TIMEOUT_MS = 60_000;
+const MODEL = "gemini-2.5-flash";
+const MAX_RETRIES = 3;
+const RETRY_DELAYS_MS = [5_000, 15_000, 30_000]; // exponential backoff
 
 async function callGemini(
-  request: ReturnType<typeof generateGoalsRequestSchema.parse>
+  request: ReturnType<typeof generateGoalsRequestSchema.parse>,
 ): Promise<GenerateGoalsResponse> {
   const apiKey = process.env.GOOGLE_AI_API_KEY;
   if (!apiKey) {
@@ -59,50 +32,91 @@ async function callGemini(
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: MODEL,
     generationConfig: {
       temperature: 0.55,
       responseMimeType: "application/json",
     },
   });
 
-  const systemPrompt = buildSystemPrompt();
-  const userMessage = buildUserMessage(request);
+  const systemPrompt = buildSystemPrompt(request.locale);
+  const userMessage = buildUserMessage(request, request.activityStats ?? undefined);
 
   const result = await model.generateContent({
     systemInstruction: systemPrompt,
     contents: [{ role: "user", parts: [{ text: userMessage }] }],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    generationConfig: { thinkingConfig: { thinkingBudget: 0 } } as any,
   });
 
   const text = result.response.text();
   const cleaned = stripMarkdownFences(text);
-  const parsed = JSON.parse(cleaned);
-  return generateGoalsResponseSchema.parse(parsed);
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (e) {
+    console.error("[generate-goals] JSON parse failed:", e);
+    console.error("[generate-goals] Raw Gemini response:", text.slice(0, 2000));
+    throw new Error("Failed to parse Gemini response as JSON");
+  }
+
+  try {
+    return generateGoalsResponseSchema.parse(parsed);
+  } catch (e) {
+    console.error("[generate-goals] Zod validation failed:", e);
+    console.error("[generate-goals] Parsed response keys:", Object.keys(parsed as Record<string, unknown>));
+    throw new Error("Gemini response did not match expected schema");
+  }
 }
 
 export async function POST(req: NextRequest) {
+  const authFail = checkAuth(req);
+  if (authFail) return authFail;
+  const rateFail = rateLimit(req);
+  if (rateFail) return rateFail;
+
   try {
     const body = await req.json();
-    const sanitized = sanitizeRequest(body);
+    const sanitized = sanitizeRequest(body, {
+      profileNlFields: [
+        "currentFocus",
+        "desiredChange",
+        "neededSkills",
+        "midTermVision",
+        "lifetimeDream",
+      ],
+      profileShortFields: ["occupation", "lifeStage"],
+      topLevelStrings: { directionChange: 500 },
+    });
     const validated = generateGoalsRequestSchema.parse(sanitized);
 
-    // Attempt with timeout using Promise.race
-    try {
-      const response = await withTimeout(callGemini(validated), TIMEOUT_MS);
-      return NextResponse.json(response);
-    } catch {
-      // Auto-retry once
+    // Retry loop with delay for transient errors (503/429)
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        const delay = RETRY_DELAYS_MS[attempt - 1] ?? 30_000;
+        console.log(`[generate-goals] Retry ${attempt}/${MAX_RETRIES} after ${delay}ms delay`);
+        await sleep(delay);
+      }
       try {
         const response = await withTimeout(callGemini(validated), TIMEOUT_MS);
         return NextResponse.json(response);
-      } catch {
-        return NextResponse.json(
-          { error: "Goal generation failed. Please try again." },
-          { status: 502 }
-        );
+      } catch (error) {
+        lastError = error;
+        console.error(`[generate-goals] Attempt ${attempt + 1} failed:`, error);
+        if (!isRetryable(error)) break; // Non-retryable error, stop immediately
       }
     }
+
+    const msg = lastError instanceof Error ? lastError.message : "";
+    const status = msg.includes("503") || msg.includes("429") ? 503 : 502;
+    const userMsg = status === 503
+      ? "AI service is temporarily busy. Please try again in a moment."
+      : "Goal generation failed. Please try again.";
+    return NextResponse.json({ error: userMsg }, { status });
   } catch (error) {
+    console.error("[generate-goals] Request error:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid request data." },
