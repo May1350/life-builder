@@ -33,19 +33,37 @@ const existingGoalSchema = z.object({
   keep: z.boolean().optional(),
 });
 
+// Activity stats — computed client-side, passed through to prompt builder
+const activityStatsSchema = z.object({
+  totalCompleted: z.number(),
+  totalPending: z.number(),
+  avgCompletedMinutes: z.number(),
+  completionRate: z.number(),
+  mostActiveHorizon: z.string(),
+  leastActiveHorizon: z.string(),
+  recentCompletions: z.array(z.string()),
+  horizonBreakdown: z.array(z.object({
+    horizon: z.string(),
+    completed: z.number(),
+    pending: z.number(),
+  })),
+}).optional();
+
 export const generateGoalsRequestSchema = z.object({
   profile: profileSchema,
   routineSummary: routineSummarySchema,
   allocations: allocationsSchema,
   existingGoals: z.array(existingGoalSchema).optional(),
   directionChange: z.string().max(500).optional(),
-  previousCoherenceThread: z.string().optional(),
+  previousCoherenceThread: z.string().max(1000).optional(),
   mode: z.enum(["initial", "regenerate"]).optional(),
+  locale: z.enum(["en", "ko", "ja"]).optional().default("en"),
+  activityStats: activityStatsSchema,
 });
 
 const starterTaskSchema = z.object({
   title: z.string(),
-  estimatedMinutes: z.number().int().min(5),
+  estimatedMinutes: z.number().min(5).transform((v) => Math.round(v)),
   horizonKey: horizonKeySchema,
   dueDate: z.string().optional(),
 });
@@ -54,7 +72,8 @@ const generatedGoalSchema = z.object({
   title: z.string(),
   description: z.string(),
   priority: z.enum(["low", "medium", "high"]),
-  starterTasks: z.array(starterTaskSchema).max(3),
+  parentIndex: z.number().int().min(0).optional(),
+  starterTasks: z.array(starterTaskSchema),
 });
 
 const generatableHorizonKey = z.enum([
@@ -66,10 +85,59 @@ const wheelOfLifeCategory = z.enum([
 ]);
 
 export const generateGoalsResponseSchema = z.object({
-  goals: z.record(generatableHorizonKey, z.array(generatedGoalSchema).max(5)),
+  goals: z.object({
+    "this-month": z.array(generatedGoalSchema).optional().default([]),
+    "this-year": z.array(generatedGoalSchema).optional().default([]),
+    "3-years": z.array(generatedGoalSchema).optional().default([]),
+    "10-years": z.array(generatedGoalSchema).optional().default([]),
+    "lifetime": z.array(generatedGoalSchema).optional().default([]),
+  }),
   wheelOfLifeBalance: z.record(wheelOfLifeCategory, z.number().min(1).max(5)),
-  coherenceThread: z.string().max(500),
+  coherenceThread: z.string(),
 });
 
 export type GenerateGoalsRequest = z.infer<typeof generateGoalsRequestSchema>;
 export type GenerateGoalsResponse = z.infer<typeof generateGoalsResponseSchema>;
+
+// ── Health Review ──
+
+const flaggedGoalSchema = z.object({
+  goalId: z.string(),
+  title: z.string(),
+  horizonKey: generatableHorizonKey,
+  parentGoalTitle: z.string().optional(),
+  status: z.enum(["stale", "needs-next", "struggling"]),
+  userResponse: z.string(),
+  completedTasks: z.array(z.string()),
+  pendingTasks: z.array(z.string()),
+});
+
+export const healthReviewRequestSchema = z.object({
+  profile: profileSchema,
+  locale: z.enum(["en", "ko", "ja"]).optional().default("en"),
+  flaggedGoals: z.array(flaggedGoalSchema),
+  activityStats: activityStatsSchema,
+});
+
+const goalUpdateSchema = z.object({
+  goalId: z.string(),
+  action: z.enum(["new-tasks", "replace-goal", "break-down"]),
+  newGoal: z.object({
+    title: z.string(),
+    description: z.string(),
+    priority: z.enum(["low", "medium", "high"]),
+  }).optional(),
+  newTasks: z.array(z.object({
+    title: z.string(),
+    estimatedMinutes: z.number().min(5).transform((v) => Math.round(v)),
+    horizonKey: horizonKeySchema,
+    dueDate: z.string().optional(),
+  })),
+});
+
+export const healthReviewResponseSchema = z.object({
+  updates: z.array(goalUpdateSchema),
+});
+
+export type HealthReviewRequest = z.infer<typeof healthReviewRequestSchema>;
+export type HealthReviewResponse = z.infer<typeof healthReviewResponseSchema>;
