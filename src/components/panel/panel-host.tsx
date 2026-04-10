@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 
 export type PanelType = "manage" | "settings" | "menu" | "review" | null;
 
@@ -66,6 +66,9 @@ export function PanelHost({ children, panelContent }: Props) {
   const openPanel = useCallback((p: PanelType) => setActivePanel(p), []);
   const closePanel = useCallback(() => setActivePanel(null), []);
 
+  // Drag controls for the manage bottom panel — started from the handle only
+  const manageDragControls = useDragControls();
+
   const mainState = activePanel ?? "closed";
 
   return (
@@ -115,19 +118,43 @@ export function PanelHost({ children, panelContent }: Props) {
         <AnimatePresence>
           {isManage && (
             <motion.div
+              key="manage-backdrop"
+              className="absolute inset-0 z-30 bg-black/40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={closePanel}
+            />
+          )}
+          {isManage && (
+            <motion.div
               key="manage"
-              className="absolute inset-x-0 bottom-0 z-30 bg-white rounded-t-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.1)] overflow-y-auto will-change-transform"
+              className="absolute inset-x-0 bottom-0 z-40 bg-white rounded-t-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.1)] flex flex-col will-change-transform"
               style={{ height: "78%" }}
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={springTransition}
+              drag="y"
+              dragControls={manageDragControls}
+              dragListener={false}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 80 || info.velocity.y > 500) {
+                  closePanel();
+                }
+              }}
             >
-              {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-1">
+              {/* Drag handle — the only region that initiates drag */}
+              <div
+                className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none"
+                onPointerDown={(e) => manageDragControls.start(e)}
+              >
                 <div className="w-10 h-1 rounded-full bg-gray-300" />
               </div>
-              {panelContent}
+              <div className="flex-1 overflow-y-auto">{panelContent}</div>
             </motion.div>
           )}
         </AnimatePresence>
