@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useLocale } from "@/providers/locale-provider";
 
 const LIFE_STAGES = [
   "Student", "Early Career", "Mid Career", "Senior", "Freelancer",
@@ -35,9 +36,10 @@ interface Props {
 }
 
 export function ProfileBasics({ initial, onNext, onBack }: Props) {
+  const { t } = useLocale();
   const [occupation, setOccupation] = useState(initial?.occupation ?? "");
   const [lifeStage, setLifeStage] = useState(initial?.lifeStage ?? "");
-  const [age, setAge] = useState(initial?.age ?? 25);
+  const [age, setAge] = useState<number | "">(initial?.age ?? "");
   const [interests, setInterests] = useState<string[]>(initial?.interests ?? []);
   const [values, setValues] = useState<string[]>(initial?.values ?? []);
 
@@ -52,24 +54,24 @@ export function ProfileBasics({ initial, onNext, onBack }: Props) {
   const isValid =
     occupation.length > 0 &&
     lifeStage.length > 0 &&
-    age >= 10 && age <= 120 &&
+    typeof age === "number" && age >= 10 && age <= 120 &&
     interests.length >= 1 &&
     values.length >= 2 && values.length <= 3;
 
   return (
     <div className="flex-1 flex flex-col px-6 py-8">
       <div className="mb-6">
-        <p className="text-xs text-gray-400 mb-1">Step 3 of 5</p>
-        <h2 className="text-xl font-bold text-gray-900">About You</h2>
-        <p className="text-sm text-gray-500 mt-1">Help us understand your background.</p>
+        <p className="text-xs text-gray-400 mb-1">{t("onboarding.step", { n: 3 })}</p>
+        <h2 className="text-xl font-bold text-gray-900">{t("basics.title")}</h2>
+        <p className="text-sm text-gray-500 mt-1">{t("basics.subtitle")}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-5">
         {/* Occupation */}
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-1 block">Occupation</label>
+          <label className="text-sm font-medium text-gray-700 mb-1 block">{t("basics.occupation")}</label>
           <Input
-            placeholder="e.g. Software Engineer"
+            placeholder={t("basics.occupation.placeholder")}
             value={occupation}
             onChange={(e) => setOccupation((e.target as HTMLInputElement).value)}
           />
@@ -77,19 +79,22 @@ export function ProfileBasics({ initial, onNext, onBack }: Props) {
 
         {/* Age */}
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-1 block">Age</label>
+          <label className="text-sm font-medium text-gray-700 mb-1 block">{t("basics.age")}</label>
           <Input
             type="number"
             min={10}
             max={120}
             value={age}
-            onChange={(e) => setAge(Number((e.target as HTMLInputElement).value))}
+            onChange={(e) => {
+              const v = (e.target as HTMLInputElement).value;
+              setAge(v === "" ? "" : Number(v));
+            }}
           />
         </div>
 
         {/* Life Stage */}
         <div>
-          <label className="text-sm font-medium text-gray-700 mb-2 block">Life Stage</label>
+          <label className="text-sm font-medium text-gray-700 mb-2 block">{t("basics.lifeStage")}</label>
           <div className="flex flex-wrap gap-2">
             {LIFE_STAGES.map((stage) => (
               <Badge
@@ -98,7 +103,7 @@ export function ProfileBasics({ initial, onNext, onBack }: Props) {
                 className="cursor-pointer text-xs"
                 onClick={() => setLifeStage(stage)}
               >
-                {stage}
+                {t("tag." + stage)}
               </Badge>
             ))}
           </div>
@@ -107,7 +112,7 @@ export function ProfileBasics({ initial, onNext, onBack }: Props) {
         {/* Interests */}
         <div>
           <label className="text-sm font-medium text-gray-700 mb-2 block">
-            Interests <span className="text-gray-400">(pick up to 5)</span>
+            {t("basics.interests")} <span className="text-gray-400">{t("basics.interests.hint")}</span>
           </label>
           <div className="flex flex-wrap gap-2">
             {INTEREST_TAGS.map((tag) => (
@@ -117,7 +122,7 @@ export function ProfileBasics({ initial, onNext, onBack }: Props) {
                 className="cursor-pointer text-xs"
                 onClick={() => toggleTag(tag, interests, setInterests, 5)}
               >
-                {tag}
+                {t("tag." + tag)}
               </Badge>
             ))}
           </div>
@@ -126,7 +131,7 @@ export function ProfileBasics({ initial, onNext, onBack }: Props) {
         {/* Values */}
         <div>
           <label className="text-sm font-medium text-gray-700 mb-2 block">
-            Core Values <span className="text-gray-400">(pick 2-3)</span>
+            {t("basics.values")} <span className="text-gray-400">{t("basics.values.hint")}</span>
           </label>
           <div className="flex flex-wrap gap-2">
             {VALUE_TAGS.map((tag) => (
@@ -136,7 +141,7 @@ export function ProfileBasics({ initial, onNext, onBack }: Props) {
                 className="cursor-pointer text-xs"
                 onClick={() => toggleTag(tag, values, setValues, 3)}
               >
-                {tag}
+                {t("tag." + tag)}
               </Badge>
             ))}
           </div>
@@ -144,13 +149,13 @@ export function ProfileBasics({ initial, onNext, onBack }: Props) {
       </div>
 
       <div className="flex gap-2 mt-4">
-        <Button variant="outline" className="flex-1" onClick={onBack}>Back</Button>
+        <Button variant="outline" className="flex-1" onClick={onBack}>{t("common.back")}</Button>
         <Button
           className="flex-1"
           disabled={!isValid}
-          onClick={() => onNext({ occupation, lifeStage, age, interests, values })}
+          onClick={() => onNext({ occupation, lifeStage, age: age as number, interests, values })}
         >
-          Next
+          {t("common.next")}
         </Button>
       </div>
     </div>

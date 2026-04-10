@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/providers/locale-provider";
 
 interface ProfileCurrentData {
   currentFocus: string;
@@ -16,14 +17,15 @@ interface Props {
 }
 
 export function ProfileCurrent({ initial, onNext, onBack }: Props) {
+  const { t } = useLocale();
   const [currentFocus, setCurrentFocus] = useState(initial?.currentFocus ?? "");
   const [desiredChange, setDesiredChange] = useState(initial?.desiredChange ?? "");
   const [neededSkills, setNeededSkills] = useState(initial?.neededSkills ?? "");
 
   const fields = [
-    { label: "What are you most focused on right now?", value: currentFocus, set: setCurrentFocus },
-    { label: "What do you most want to change?", value: desiredChange, set: setDesiredChange },
-    { label: "What skills or knowledge do you need?", value: neededSkills, set: setNeededSkills },
+    { label: t("current.focus"), value: currentFocus, set: setCurrentFocus },
+    { label: t("current.change"), value: desiredChange, set: setDesiredChange },
+    { label: t("current.skills"), value: neededSkills, set: setNeededSkills },
   ];
 
   const isValid = fields.every((f) => f.value.length >= 10);
@@ -31,9 +33,9 @@ export function ProfileCurrent({ initial, onNext, onBack }: Props) {
   return (
     <div className="flex-1 flex flex-col px-6 py-8">
       <div className="mb-6">
-        <p className="text-xs text-gray-400 mb-1">Step 4 of 5</p>
-        <h2 className="text-xl font-bold text-gray-900">Your Current State</h2>
-        <p className="text-sm text-gray-500 mt-1">More detail = better goals.</p>
+        <p className="text-xs text-gray-400 mb-1">{t("onboarding.step", { n: 4 })}</p>
+        <h2 className="text-xl font-bold text-gray-900">{t("current.title")}</h2>
+        <p className="text-sm text-gray-500 mt-1">{t("current.subtitle")}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-5">
@@ -44,7 +46,7 @@ export function ProfileCurrent({ initial, onNext, onBack }: Props) {
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-gray-400 resize-none"
               rows={3}
               maxLength={500}
-              placeholder="At least 10 characters..."
+              placeholder={t("current.placeholder")}
               value={field.value}
               onChange={(e) => field.set(e.target.value)}
             />
@@ -54,13 +56,13 @@ export function ProfileCurrent({ initial, onNext, onBack }: Props) {
       </div>
 
       <div className="flex gap-2 mt-4">
-        <Button variant="outline" className="flex-1" onClick={onBack}>Back</Button>
+        <Button variant="outline" className="flex-1" onClick={onBack}>{t("common.back")}</Button>
         <Button
           className="flex-1"
           disabled={!isValid}
           onClick={() => onNext({ currentFocus, desiredChange, neededSkills })}
         >
-          Next
+          {t("common.next")}
         </Button>
       </div>
     </div>

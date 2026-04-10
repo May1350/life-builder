@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/providers/locale-provider";
 
 interface ProfileVisionData {
   midTermVision: string;
@@ -15,12 +16,13 @@ interface Props {
 }
 
 export function ProfileVision({ initial, onNext, onBack }: Props) {
+  const { t } = useLocale();
   const [midTermVision, setMidTermVision] = useState(initial?.midTermVision ?? "");
   const [lifetimeDream, setLifetimeDream] = useState(initial?.lifetimeDream ?? "");
 
   const fields = [
-    { label: "What kind of life do you want in 3-5 years?", value: midTermVision, set: setMidTermVision },
-    { label: "What's your biggest lifetime dream or goal?", value: lifetimeDream, set: setLifetimeDream },
+    { label: t("vision.midTerm"), value: midTermVision, set: setMidTermVision },
+    { label: t("vision.lifetime"), value: lifetimeDream, set: setLifetimeDream },
   ];
 
   const isValid = fields.every((f) => f.value.length >= 10);
@@ -28,9 +30,9 @@ export function ProfileVision({ initial, onNext, onBack }: Props) {
   return (
     <div className="flex-1 flex flex-col px-6 py-8">
       <div className="mb-6">
-        <p className="text-xs text-gray-400 mb-1">Step 5 of 5</p>
-        <h2 className="text-xl font-bold text-gray-900">Your Vision</h2>
-        <p className="text-sm text-gray-500 mt-1">Dream big. We'll work backwards from here.</p>
+        <p className="text-xs text-gray-400 mb-1">{t("onboarding.step", { n: 5 })}</p>
+        <h2 className="text-xl font-bold text-gray-900">{t("vision.title")}</h2>
+        <p className="text-sm text-gray-500 mt-1">{t("vision.subtitle")}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-5">
@@ -41,7 +43,7 @@ export function ProfileVision({ initial, onNext, onBack }: Props) {
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-gray-400 resize-none"
               rows={4}
               maxLength={500}
-              placeholder="At least 10 characters..."
+              placeholder={t("vision.placeholder")}
               value={field.value}
               onChange={(e) => field.set(e.target.value)}
             />
@@ -51,13 +53,13 @@ export function ProfileVision({ initial, onNext, onBack }: Props) {
       </div>
 
       <div className="flex gap-2 mt-4">
-        <Button variant="outline" className="flex-1" onClick={onBack}>Back</Button>
+        <Button variant="outline" className="flex-1" onClick={onBack}>{t("common.back")}</Button>
         <Button
           className="flex-1"
           disabled={!isValid}
           onClick={() => onNext({ midTermVision, lifetimeDream })}
         >
-          Generate Goals
+          {t("vision.cta")}
         </Button>
       </div>
     </div>
