@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Life Builder — Lifetime Time Management Adviser
 
-## Getting Started
+An AI-augmented advisor that connects **lifetime-scale goals** to **daily schedules**, built with Next.js + TypeScript.
 
-First, run the development server:
+**Author**: [@May1350](https://github.com/May1350) · Keio Univ. Faculty of Business & Commerce · 2026-
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Status: 🚧 **Early stage** — boilerplate + architecture design phase. MVP targeted for 2026 Q3.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Why
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Most time-management tools work at one of two scales:
 
-## Learn More
+- **Short**: calendar apps, to-do lists (day / week)
+- **Long**: journals, vision boards (year / decade)
 
-To learn more about Next.js, take a look at the following resources:
+But the hard part is **the connection between them**: "Does what I'm doing today actually move me toward what I want in 10 years?"
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Life Builder** is an experiment in closing that gap with an AI agent that:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Holds a user's long-term goals (career, health, relationships, personal)
+2. Observes daily schedules and outputs
+3. Reports back honestly — are you converging or diverging?
 
-## Deploy on Vercel
+## What it will do (MVP)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Goal hierarchy**: users define goals at 10-year, 5-year, 1-year, and quarterly scales
+- **Daily check-in**: quick input of what the user actually did
+- **AI adviser**: LLM evaluates alignment between today's output and long-term goals, with structured feedback
+- **No moralizing**: the agent flags drift without scolding — signal, not pressure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Stack
+
+| Layer | Tech |
+|---|---|
+| Frontend | Next.js 15 (App Router) · TypeScript · Tailwind CSS |
+| Auth (planned) | Vercel auth or Clerk |
+| DB (planned) | Vercel Postgres |
+| AI (planned) | Anthropic Claude API (structured output) |
+| Hosting | Vercel |
+
+## Roadmap
+
+- [ ] **M0 (current)**: Next.js scaffold, data model for goal hierarchy
+- [ ] **M1**: Daily check-in UI, simple LLM round-trip
+- [ ] **M2**: Goal hierarchy editor, weekly digest
+- [ ] **M3**: Public beta
+
+## Philosophy
+
+This is a personal project exploring a question I care about:
+
+> "In an era where AI can increasingly do short-term tasks for us, the scarce and compounding human asset becomes the taste to decide what is worth doing at all. Can a tool help us hold that compass steady?"
+
+(Related write-up in my [personal journal](https://github.com/May1350) · 2026-04)
+
+## Contribution
+
+At the moment, this is a solo design exploration, not a team project. If you're working on similar problems, I'd love to talk — reach out via [@May1350](https://github.com/May1350).
+
+## License
+
+TBD (likely MIT once the first public MVP ships).
+
+---
+
+*Built in the same spirit as my other projects: an exploration of how an "AI orchestrator" — someone who directs AI to build useful things rather than coding from scratch — can ship products that matter.*
