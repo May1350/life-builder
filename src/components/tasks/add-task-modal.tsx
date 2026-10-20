@@ -13,6 +13,7 @@ import { HorizonChip } from "@/components/shared/horizon-chip";
 import { HORIZONS } from "@/lib/constants";
 import { dataService } from "@/services";
 import type { HorizonKey } from "@/types";
+import { useLocale } from "@/providers/locale-provider";
 
 interface AddTaskModalProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface AddTaskModalProps {
 }
 
 export function AddTaskModal({ open, onClose }: AddTaskModalProps) {
+  const { t } = useLocale();
   const [title, setTitle] = useState("");
   const [horizonKey, setHorizonKey] = useState<HorizonKey>("this-week");
   const [dueDate, setDueDate] = useState("");
@@ -49,15 +51,15 @@ export function AddTaskModal({ open, onClose }: AddTaskModalProps) {
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-sm mx-auto">
         <DialogHeader>
-          <DialogTitle>Add Task</DialogTitle>
+          <DialogTitle>{t("tasks.addTitle")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Title */}
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">Title</label>
+            <label className="text-xs text-gray-500 mb-1 block">{t("tasks.title")}</label>
             <Input
-              placeholder="What do you need to do?"
+              placeholder={t("tasks.titlePlaceholder")}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus
@@ -67,7 +69,7 @@ export function AddTaskModal({ open, onClose }: AddTaskModalProps) {
           {/* Horizon */}
           <div>
             <label className="text-xs text-gray-500 mb-1 block">
-              Horizon
+              {t("tasks.horizon")}
             </label>
             <div className="flex flex-wrap gap-1.5">
               {HORIZONS.map((h) => (
@@ -87,7 +89,7 @@ export function AddTaskModal({ open, onClose }: AddTaskModalProps) {
             <>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">
-                  Due date
+                  {t("tasks.dueDate")}
                 </label>
                 <Input
                   type="date"
@@ -97,11 +99,11 @@ export function AddTaskModal({ open, onClose }: AddTaskModalProps) {
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">
-                  Estimated time (minutes)
+                  {t("tasks.estimated")}
                 </label>
                 <Input
                   type="number"
-                  placeholder="e.g. 60"
+                  placeholder={t("tasks.estimatedPlaceholder")}
                   value={estimatedMinutes}
                   onChange={(e) => setEstimatedMinutes(e.target.value)}
                 />
@@ -111,7 +113,7 @@ export function AddTaskModal({ open, onClose }: AddTaskModalProps) {
 
           {/* Save */}
           <Button onClick={handleSave} className="w-full" disabled={!title.trim()}>
-            Save
+            {t("common.save")}
           </Button>
         </div>
       </DialogContent>

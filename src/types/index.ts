@@ -125,6 +125,7 @@ export type Priority = "low" | "medium" | "high";
 export interface Goal {
   id?: string;
   horizonKey: HorizonKey;
+  parentGoalId?: number;
   title: string;
   description?: string;
   priority: Priority;
@@ -163,9 +164,12 @@ export interface Task {
 // ============================================================
 
 export interface AppSettings {
-  id?: string;
+  id?: number;
   onboardingComplete: boolean;
   onboardingStep?: number;
+  locale?: string;
+  lastWeeklyReview?: string;   // "YYYY-MM-DD"
+  lastMonthlyReview?: string;  // "YYYY-MM-DD"
   createdAt: Date;
   updatedAt: Date;
 }
@@ -175,7 +179,7 @@ export interface AppSettings {
 // ============================================================
 
 export interface UserProfile {
-  id?: string;
+  id?: number;
   age: number;
   occupation: string;
   lifeStage: string;

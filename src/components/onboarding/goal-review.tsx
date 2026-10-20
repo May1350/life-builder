@@ -7,18 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import type { GenerateGoalsResponse } from "@/lib/ai-schemas";
 import type { GeneratableHorizonKey } from "@/types";
 import { getHorizonColor } from "@/lib/constants";
+import { useLocale } from "@/providers/locale-provider";
 
 const REVIEW_ORDER: GeneratableHorizonKey[] = [
   "lifetime", "10-years", "3-years", "this-year", "this-month",
 ];
-
-const HORIZON_LABELS: Record<GeneratableHorizonKey, string> = {
-  lifetime: "Lifetime",
-  "10-years": "10 Years",
-  "3-years": "3 Years",
-  "this-year": "This Year",
-  "this-month": "This Month",
-};
 
 interface ReviewGoal {
   title: string;
@@ -35,6 +28,7 @@ interface Props {
 }
 
 export function GoalReview({ data, onConfirm, onBack }: Props) {
+  const { t } = useLocale();
   const [step, setStep] = useState(0);
   const [goalMap, setGoalMap] = useState<Record<string, ReviewGoal[]>>(() => {
     const map: Record<string, ReviewGoal[]> = {};
@@ -113,19 +107,19 @@ export function GoalReview({ data, onConfirm, onBack }: Props) {
             </span>
           </div>
           <h2 className="text-lg font-bold text-gray-900 mb-1">
-            {HORIZON_LABELS[horizon]}
+            {t(`horizon.${horizon}`)}
           </h2>
           <p className="text-sm text-gray-500 mb-4">
-            Review your goals. Tap to remove, edit titles inline.
+            {t("review.subtitle")}
           </p>
 
           <div className="flex-1 overflow-y-auto space-y-3">
             {goals.length === 0 && (
-              <p className="text-sm text-gray-400 italic">No goals for this horizon.</p>
+              <p className="text-sm text-gray-400 italic">{t("review.empty")}</p>
             )}
             {goals.length > 0 && goals.every((g) => g.removed) && (
               <p className="text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
-                No goals for this horizon. You can add them manually anytime.
+                {t("review.emptyFinal")}
               </p>
             )}
             {goals.map((goal, i) => (
@@ -150,7 +144,7 @@ export function GoalReview({ data, onConfirm, onBack }: Props) {
                     onClick={() => toggleGoal(i)}
                     className="text-xs text-gray-400 hover:text-gray-600 shrink-0"
                   >
-                    {goal.removed ? "Restore" : "Remove"}
+                    {goal.removed ? t("common.restore") : t("common.remove")}
                   </button>
                 </div>
                 {!goal.removed && (
@@ -160,7 +154,7 @@ export function GoalReview({ data, onConfirm, onBack }: Props) {
                       <Badge variant="outline" className="text-[10px]">{goal.priority}</Badge>
                       {goal.starterTasks.length > 0 && (
                         <span className="text-[10px] text-gray-400">
-                          {goal.starterTasks.length} starter task{goal.starterTasks.length > 1 ? "s" : ""}
+                          {goal.starterTasks.length} {goal.starterTasks.length > 1 ? t("review.starterTasks") : t("review.starterTask")}
                         </span>
                       )}
                     </div>
@@ -185,13 +179,13 @@ export function GoalReview({ data, onConfirm, onBack }: Props) {
               className="flex-1"
               onClick={() => (step > 0 ? setStep(step - 1) : onBack())}
             >
-              Back
+              {t("common.back")}
             </Button>
             <Button
               className="flex-1"
               onClick={() => (step < REVIEW_ORDER.length - 1 ? setStep(step + 1) : handleConfirm())}
             >
-              {step < REVIEW_ORDER.length - 1 ? "Next" : "Confirm Goals"}
+              {step < REVIEW_ORDER.length - 1 ? t("common.next") : t("review.confirm")}
             </Button>
           </div>
         </motion.div>

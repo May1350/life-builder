@@ -52,6 +52,29 @@ class LifeBuilderDB extends Dexie {
             goal.source = goal.source ?? "manual";
           });
       });
+
+    this.version(3).stores({
+      horizonAllocations: "++id, horizonKey",
+      weeklyRoutineTasks: "++id, dayOfWeek",
+      dailyOverrides: "++id, date",
+      dailyTimetables: "++id, &date",
+      goals: "++id, horizonKey, source, parentGoalId",
+      tasks: "++id, horizonKey, goalId, status",
+      appSettings: "++id",
+      userProfiles: "++id",
+    });
+
+    // v4: AppSettings gets lastWeeklyReview/lastMonthlyReview (non-indexed)
+    this.version(4).stores({
+      horizonAllocations: "++id, horizonKey",
+      weeklyRoutineTasks: "++id, dayOfWeek",
+      dailyOverrides: "++id, date",
+      dailyTimetables: "++id, &date",
+      goals: "++id, horizonKey, source, parentGoalId",
+      tasks: "++id, horizonKey, goalId, status",
+      appSettings: "++id",
+      userProfiles: "++id",
+    });
   }
 }
 

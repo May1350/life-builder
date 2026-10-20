@@ -7,8 +7,10 @@ import { buildDailyTimetable } from "@/engine/timetable-builder";
 import { tomorrowString, getDayOfWeek } from "@/lib/time-utils";
 import { getHorizonColor } from "@/lib/constants";
 import { ChevronRight } from "lucide-react";
+import { useLocale } from "@/providers/locale-provider";
 
 export function TomorrowStrip() {
+  const { t } = useLocale();
   const tomorrow = tomorrowString();
   const dow = getDayOfWeek(tomorrow);
 
@@ -27,7 +29,7 @@ export function TomorrowStrip() {
   // Show first 4 blocks as preview
   const preview = blocks.filter((b) => b.start >= "07:00").slice(0, 4);
 
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayNames = [t("day.Sun"), t("day.Mon"), t("day.Tue"), t("day.Wed"), t("day.Thu"), t("day.Fri"), t("day.Sat")];
 
   return (
     <div className="mx-4 mt-4">
@@ -36,10 +38,10 @@ export function TomorrowStrip() {
         className="flex items-center justify-between mb-2"
       >
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-          Tomorrow · {dayNames[dow]}
+          {t("tomorrow.prefix")} {dayNames[dow]}
         </span>
         <span className="text-xs text-gray-400 flex items-center gap-0.5">
-          Edit <ChevronRight className="h-3 w-3" />
+          {t("common.edit")} <ChevronRight className="h-3 w-3" />
         </span>
       </Link>
       <div className="space-y-1">

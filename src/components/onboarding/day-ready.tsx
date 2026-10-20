@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { useLocale } from "@/providers/locale-provider";
 
 interface Props {
   goalCount: number;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function DayReady({ goalCount, taskCount, onContinue }: Props) {
+  const { t } = useLocale();
   const calledRef = useRef(false);
 
   const handleContinue = () => {
@@ -31,18 +33,18 @@ export function DayReady({ goalCount, taskCount, onContinue }: Props) {
       onClick={handleContinue}
     >
       <div className="text-4xl mb-4">{"\u{1F3AF}"}</div>
-      <h2 className="text-xl font-bold text-gray-900">Your day is ready</h2>
+      <h2 className="text-xl font-bold text-gray-900">{t("dayReady.title")}</h2>
       <div className="flex gap-6 mt-4">
         <div className="text-center">
           <p className="text-2xl font-bold text-gray-900">{goalCount}</p>
-          <p className="text-xs text-gray-500">goals</p>
+          <p className="text-xs text-gray-500">{t("dayReady.goals")}</p>
         </div>
         <div className="text-center">
           <p className="text-2xl font-bold text-gray-900">{taskCount}</p>
-          <p className="text-xs text-gray-500">tasks</p>
+          <p className="text-xs text-gray-500">{t("dayReady.tasks")}</p>
         </div>
       </div>
-      <p className="text-xs text-gray-400 mt-6">Tap to continue</p>
+      <p className="text-xs text-gray-400 mt-6">{t("dayReady.cta")}</p>
     </motion.div>
   );
 }

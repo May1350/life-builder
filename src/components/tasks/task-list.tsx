@@ -6,12 +6,14 @@ import { HORIZONS, getHorizonColor } from "@/lib/constants";
 import { Check, Circle, Loader2 } from "lucide-react";
 import { dataService } from "@/services";
 import type { HorizonKey } from "@/types";
+import { useLocale } from "@/providers/locale-provider";
 
 interface TaskListProps {
   filterHorizon?: HorizonKey;
 }
 
 export function TaskList({ filterHorizon }: TaskListProps) {
+  const { t } = useLocale();
   const tasks = useLiveQuery(() => db.tasks.toArray(), []);
   const goals = useLiveQuery(() => db.goals.toArray(), []);
 
@@ -41,7 +43,7 @@ export function TaskList({ filterHorizon }: TaskListProps) {
   if (grouped.length === 0) {
     return (
       <p className="text-sm text-gray-400 text-center py-8">
-        No tasks yet. Add one to get started.
+        {t("tasks.empty")}
       </p>
     );
   }

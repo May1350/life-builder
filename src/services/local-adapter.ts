@@ -285,10 +285,14 @@ export class LocalAdapter implements DataService {
     profile: Omit<UserProfile, "id" | "createdAt" | "updatedAt">
   ): Promise<string> {
     const now = new Date();
+    // Strip undefined values — Dexie can reject explicit undefineds
+    const clean = Object.fromEntries(
+      Object.entries(profile).filter(([, v]) => v !== undefined)
+    );
     // Replace existing profile (single user)
     await db.userProfiles.clear();
     const id = await db.userProfiles.add({
-      ...profile,
+      ...clean,
       createdAt: now,
       updatedAt: now,
     } as UserProfile);

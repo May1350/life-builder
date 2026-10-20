@@ -140,7 +140,7 @@ describe("generateGoalsResponseSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("should reject more than 5 goals per horizon", () => {
+  it("should accept many goals per horizon (lenient for AI output)", () => {
     const goals = Array.from({ length: 6 }, (_, i) => ({
       title: `Goal ${i}`,
       description: `Description ${i}`,
@@ -156,10 +156,10 @@ describe("generateGoalsResponseSchema", () => {
       coherenceThread: "Thread",
     };
     const result = generateGoalsResponseSchema.safeParse(response);
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
-  it("should reject more than 3 starter tasks per goal", () => {
+  it("should accept many starter tasks per goal (lenient for AI output)", () => {
     const tasks = Array.from({ length: 4 }, (_, i) => ({
       title: `Task ${i}`, estimatedMinutes: 30, horizonKey: "this-month" as const,
     }));
@@ -172,6 +172,6 @@ describe("generateGoalsResponseSchema", () => {
       coherenceThread: "Thread",
     };
     const result = generateGoalsResponseSchema.safeParse(response);
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 });

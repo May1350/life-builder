@@ -27,8 +27,8 @@ describe("buildSystemPrompt", () => {
   it("should include goal framework instructions", () => {
     const prompt = buildSystemPrompt();
     expect(prompt).toContain("vision");
-    expect(prompt).toContain("SMART");
     expect(prompt).toContain("milestone");
+    expect(prompt).toContain("deliverable");
     expect(prompt).toContain("coherenceThread");
   });
 
